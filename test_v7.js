@@ -4,7 +4,8 @@ const html = fs.readFileSync(__dirname + '/vercel/index.html', 'utf8');
 const script = html.match(/<script>([\s\S]*)<\/script>/)[1].replace(/init\(\);\s*$/, '')
   .replace('let S=', 'S=')
   .replace('let WHO=', 'WHO=')
-  .replace('let remote=false,saveTimer=null;', 'remote=false;saveTimer=null;');
+  .replace('let remote=false,saveTimer=null;', 'remote=false;saveTimer=null;')
+  .replace('const CONFLICTS=', 'CONFLICTS=');
 
 // ---- fake DOM ----
 function el() {
@@ -29,6 +30,15 @@ global.URL = { createObjectURL: () => 'blob:x', revokeObjectURL(){} };
 global.fetch = async () => { throw new Error('no net'); }; // modo local
 
 eval(script); // define S, decide, computeDecisions, mergeRemote, buildAta, downloadAta, migrate...
+
+// catálogo v9 não tem conflitos pendentes — injeta conflitos sintéticos para exercitar o quórum/votação
+if (!CONFLICTS.length) {
+  CONFLICTS.push(
+    { id: 'C3', tipo: 'dup', codes: ['ACA061', 'ACA062'], titulo: 'sintético', why: '' },
+    { id: 'C2', tipo: 'dup', codes: ['ACA056', 'ACA058'], titulo: 'sintético', why: '' },
+    { id: 'C5', tipo: 'dup', codes: ['ACA425', 'ACA455'], titulo: 'sintético', why: '' },
+    { id: 'C6', tipo: 'sob', codes: ['ACA055', 'ACA401'], titulo: 'sintético', why: '' });
+}
 
 const results = [];
 function check(name, cond, extra) { results.push((cond ? 'PASS' : 'FAIL') + ' ' + name + (extra ? ' — ' + extra : '')); if(!cond) process.exitCode = 1; }

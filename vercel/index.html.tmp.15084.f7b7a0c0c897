@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Linha de Decisão — Eixo Operações | FACC/UFRJ</title>
+<style>
+:root{--navy:#001F3F;--gold:#C9A84C;--ink:#1d2733;--mut:#5b6675;--bg:#f4f3ef;
+--red:#c0392b;--redbg:#fdeceb;--amber:#9a6a10;--amberbg:#fdf3df;--teal:#0c6e56;--tealbg:#e3f4ee;--obrigbg:#e8edf4}
+*{box-sizing:border-box;margin:0}
+body{font-family:'Segoe UI',Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5;font-size:15px}
+header{background:var(--navy);color:#fff;padding:14px 22px;border-bottom:4px solid var(--gold);display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;align-items:center}
+header h1{font-size:1.05rem;font-weight:600}
+header p{font-size:.7rem;opacity:.85}
+#sync{font-size:.7rem;padding:5px 10px;border-radius:12px;background:rgba(255,255,255,.15)}
+#sync.on{background:#1d9e75}
+.steps{display:flex;background:#fff;border-bottom:1px solid #dcdfe3;padding:0 10px;position:sticky;top:0;z-index:30;overflow-x:auto}
+.step{display:flex;align-items:center;gap:8px;padding:12px 14px;cursor:pointer;font-size:.78rem;font-weight:600;color:var(--mut);border-bottom:3px solid transparent;white-space:nowrap}
+.step .n{width:24px;height:24px;border-radius:50%;border:2px solid #cfd4da;display:flex;align-items:center;justify-content:center;font-size:.72rem}
+.step.on{color:var(--navy);border-color:var(--gold)}
+.step.on .n{border-color:var(--gold);background:var(--gold);color:#fff}
+.step.done .n{border-color:var(--teal);background:var(--teal);color:#fff}
+.step.locked{opacity:.45}
+.wrap{max-width:1280px;margin:0 auto;padding:16px}
+.pane{display:none}.pane.on{display:block}
+.stephead{background:#fff;border:1px solid #e0e2e6;border-left:6px solid var(--gold);border-radius:10px;padding:14px 18px;margin-bottom:14px}
+.stephead h2{font-size:1rem;color:var(--navy)}
+.stephead p{font-size:.8rem;color:var(--mut);margin-top:4px}
+.gate{background:var(--amberbg);border:1px solid var(--amber);color:var(--amber);border-radius:8px;padding:8px 12px;font-size:.76rem;font-weight:600;margin-bottom:12px;display:none}
+.gate.show{display:block}
+.conf{background:#fff;border:1px solid #e0e2e6;border-radius:12px;margin-bottom:14px;overflow:hidden}
+.cfhead{padding:10px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.cfhead.h-dup{background:var(--redbg)}.cfhead.h-sob{background:var(--amberbg)}
+.cfhead b{font-size:.88rem}
+.cfhead .why{font-size:.74rem;color:var(--mut);width:100%}
+.cfstate{font-size:.68rem;font-weight:700;padding:3px 10px;border-radius:10px;background:#fff}
+.duel{display:grid;grid-template-columns:1fr 1fr}
+.duel.tri{grid-template-columns:1fr 1fr 1fr}
+@media(max-width:860px){.duel,.duel.tri{grid-template-columns:1fr}}
+.side{padding:12px 16px;border-right:1px solid #eef0f2;font-size:.8rem}
+.side:last-child{border-right:none}
+.side h3{font-size:.85rem;color:var(--navy)}
+.side .meta{font-size:.68rem;color:var(--mut);margin-bottom:6px}
+.side h4{font-size:.62rem;text-transform:uppercase;letter-spacing:.5px;color:var(--gold);margin:8px 0 2px}
+.side p{font-size:.76rem;margin-bottom:4px}
+.side.win{background:var(--tealbg)}
+.side.lose{background:#f7f7f5;opacity:.55}
+.cfact{padding:10px 16px;border-top:1px solid #eef0f2;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.cfact button{padding:7px 14px;border-radius:7px;border:1px solid #cfd4da;background:#fff;cursor:pointer;font-size:.74rem;font-weight:600;color:var(--ink)}
+.cfact button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.cfact button.fus.on{background:var(--amber);border-color:var(--amber)}
+.cfact button.both.on{background:var(--teal);border-color:var(--teal)}
+.just{width:100%;margin-top:6px;padding:7px 10px;border:1px solid #dfe2e6;border-radius:7px;font-size:.74rem;font-family:inherit}
+.minicard{background:#fff;border:1px solid #e0e2e6;border-radius:9px;padding:10px 14px;margin-bottom:8px;font-size:.8rem}
+.minicard .rels{font-size:.66rem;color:var(--teal)}
+.minicard .ok{float:right;font-size:.66rem;font-weight:700;color:var(--teal)}
+details{margin-top:4px}
+details summary{cursor:pointer;font-size:.7rem;color:var(--navy);font-weight:600}
+details h4{font-size:.62rem;text-transform:uppercase;color:var(--gold);margin:6px 0 2px}
+details p{font-size:.76rem;margin-bottom:4px}
+.builder{display:grid;grid-template-columns:1fr 320px;gap:14px}
+@media(max-width:900px){.builder{grid-template-columns:1fr}}
+.slotbox{background:#fff;border:1px solid #e0e2e6;border-radius:10px;padding:14px}
+.slotbox h3{font-size:.9rem;color:var(--navy);margin-bottom:8px}
+.cov{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.cv{font-size:.66rem;font-weight:700;padding:3px 9px;border-radius:9px}
+.cv.ok{background:var(--tealbg);color:var(--teal)}.cv.gap{background:var(--redbg);color:var(--red)}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;margin:3px;font-size:.72rem;font-weight:600;cursor:pointer;border:1.5px solid #cfd4da;background:#fff;user-select:none}
+.pill.obrig{background:var(--obrigbg);border-color:var(--navy);color:var(--navy);cursor:default}
+.pill.sel{background:var(--tealbg);border-color:var(--teal);color:var(--teal)}
+.pill.fused{background:var(--amberbg);border-color:var(--amber);color:var(--amber)}
+.pill.dead{opacity:.4;text-decoration:line-through;cursor:not-allowed}
+.panel{background:#fffdf6;border:1px solid var(--gold);border-radius:10px;padding:14px;position:sticky;top:64px;font-size:.8rem}
+.panel h3{font-size:.88rem;color:var(--navy);margin-bottom:8px}
+.kpi{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px dashed #e4ddc8}
+.kpi b.ok{color:var(--teal)}.kpi b.bad{color:var(--red)}
+.cfg{display:flex;gap:6px;align-items:center;margin:4px 0;font-size:.76rem}
+.cfg input{width:50px;padding:4px;border:1px solid #cfd4da;border-radius:6px;text-align:center}
+.navbtns{display:flex;justify-content:space-between;margin:18px 0}
+.navbtns button,.actions button{padding:9px 16px;border-radius:8px;border:none;cursor:pointer;font-size:.8rem;font-weight:600}
+.btn-navy{background:var(--navy);color:#fff}.btn-line{background:#fff;border:1px solid var(--navy);color:var(--navy)}
+.btn-navy:disabled{opacity:.4;cursor:not-allowed}
+.actions{margin-top:14px;display:flex;gap:8px;flex-wrap:wrap}
+#ata{white-space:pre-wrap;background:#fff;border:1px solid #e0e2e6;border-radius:10px;padding:16px;font-family:Menlo,Consolas,monospace;font-size:.74rem}
+.sumgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:14px}
+.sum{background:#fff;border:1px solid #e0e2e6;border-radius:10px;padding:14px;text-align:center}
+.sum b{font-size:1.5rem;color:var(--navy);display:block}
+.sum span{font-size:.7rem;color:var(--mut)}
+.votes{padding:8px 16px;border-top:1px dashed #eef0f2;display:flex;gap:12px;flex-wrap:wrap;align-items:center;background:#fbfbf9}
+.vt{font-size:.7rem;display:flex;align-items:center;gap:5px}
+.vt b{min-width:52px}
+.vchip{font-size:.66rem;font-weight:700;padding:3px 9px;border-radius:9px;background:#eee;color:var(--mut)}
+.vchip.v-set{background:var(--obrigbg);color:var(--navy)}
+.consensus{font-size:.7rem;font-weight:700;padding:4px 10px;border-radius:10px;margin-left:auto}
+.cs-full{background:var(--tealbg);color:var(--teal)}
+.cs-maj{background:var(--amberbg);color:var(--amber)}
+.cs-div{background:var(--redbg);color:var(--red)}
+.cs-wait{background:#eee;color:var(--mut)}
+.nowho{background:var(--redbg);border:1px solid var(--red);color:var(--red);border-radius:8px;padding:8px 12px;font-size:.76rem;font-weight:600;margin-bottom:12px}
+footer{text-align:center;font-size:.68rem;color:var(--mut);margin:28px 0 18px}
+</style>
+</head>
+<body>
+<header>
+<div><h1>Linha de Decisão — Eixo Operações, Logística e Apoio à Decisão</h1>
+<p>FACC/UFRJ · PPC 2026 · fluxo estruturado em 6 etapas, da triagem à ata final</p></div>
+<div style="display:flex;gap:8px;align-items:center">
+<span style="font-size:.72rem;opacity:.85">Eu sou:</span>
+<select id="who" onchange="setWho(this.value)" style="padding:5px 8px;border-radius:8px;border:none;font-size:.78rem;font-weight:600">
+<option value="">— escolher —</option><option>Laura</option><option>Carlos</option><option>Camila</option>
+</select>
+<span id="sync">sem sincronização</span></div>
+</header>
+<div class="steps" id="steps"></div>
+<div class="wrap">
+
+<div class="pane" id="e1">
+<div class="stephead"><h2>Etapa 1 · Diagnóstico do eixo</h2>
+<p>Ponto de partida da banca: o que existe, onde estão os problemas e qual é o método das próximas etapas.</p></div>
+<div class="sumgrid">
+<div class="sum"><b>32</b><span>disciplinas no eixo (5 obrigatórias + 27 optativas)</span></div>
+<div class="sum"><b id="s_dup">0</b><span>duplicações (vermelho) — Etapa 2</span></div>
+<div class="sum"><b id="s_sob">0</b><span>sobreposições (âmbar) — Etapa 3</span></div>
+<div class="sum"><b id="s_free">0</b><span>complementares sem conflito — Etapa 4</span></div>
+</div>
+<div class="stephead" style="border-left-color:var(--navy)"><h2>Método</h2>
+<p>1) Resolver duplicações: escolher 1, fundir ou justificar a coexistência. 2) Resolver sobreposições parciais: definir onde fica o conteúdo. 3) Confirmar complementares. 4) Montar a grade dentro das restrições (6 condicionadas + livres) verificando a cobertura temática. 5) Gerar a ata com todas as decisões e justificativas. Cada decisão tem campo de justificativa, que vai direto para a ata.</p></div>
+<div class="navbtns"><span></span><button class="btn-navy" onclick="go(2)">Começar Etapa 2 →</button></div>
+</div>
+
+<div class="pane" id="e2">
+<div class="stephead" style="border-left-color:var(--red)"><h2>Etapa 2 · Duplicações (decisão obrigatória)</h2>
+<p>Pares/trios com a mesma ementa. Sem resolver todas, a Etapa 3 fica bloqueada.</p></div>
+<div class="nowho" id="nw2" style="display:none">Selecione quem você é no topo para registrar seu voto.</div><div id="confDup"></div>
+<div class="navbtns"><button class="btn-line" onclick="go(1)">← Etapa 1</button>
+<button class="btn-navy" id="next2" onclick="go(3)">Etapa 3 →</button></div>
+</div>
+
+<div class="pane" id="e3">
+<div class="gate" id="gate3">Há duplicações pendentes na Etapa 2. Recomenda-se resolvê-las antes.</div>
+<div class="stephead" style="border-left-color:var(--amber)"><h2>Etapa 3 · Sobreposições parciais</h2>
+<p>Conteúdo repetido em parte. Decida onde o conteúdo fica: excluir a redundante, fundir ou manter ambas com justificativa.</p></div>
+<div class="nowho" id="nw3" style="display:none">Selecione quem você é no topo para registrar seu voto.</div><div id="confSob"></div>
+<div class="navbtns"><button class="btn-line" onclick="go(2)">← Etapa 2</button>
+<button class="btn-navy" onclick="go(4)">Etapa 4 →</button></div>
+</div>
+
+<div class="pane" id="e4">
+<div class="stephead" style="border-left-color:var(--teal)"><h2>Etapa 4 · Complementares (confirmação)</h2>
+<p>Sem conflito de conteúdo. Marque "Revisada" para registrar que a banca olhou cada uma.</p></div>
+<div id="freelist"></div>
+<div class="navbtns"><button class="btn-line" onclick="go(3)">← Etapa 3</button>
+<button class="btn-navy" onclick="go(5)">Etapa 5 →</button></div>
+</div>
+
+<div class="pane" id="e5">
+<div class="gate" id="gate5">Há conflitos pendentes nas Etapas 2–3. A grade pode ficar inconsistente.</div>
+<div class="stephead" style="border-left-color:var(--navy)"><h2>Etapa 5 · Montar a grade</h2>
+<p>Somente disciplinas sobreviventes aparecem ativas. Respeite as restrições e confira a cobertura temática.</p></div>
+<div class="builder">
+<div>
+<div class="slotbox"><h3>Obrigatórias do eixo (fixas)</h3><div id="slotObrig"></div></div>
+<div class="slotbox" style="margin-top:12px"><h3>Catálogo — clique para incluir na grade</h3><div id="slotOpt"></div>
+<div class="cov" id="cov"></div></div>
+</div>
+<div class="panel">
+<h3>Restrições</h3>
+<div class="cfg">Optativas condicionadas: <input type="number" id="cOpt" min="0" value="6"></div>
+<div class="cfg">Livre escolha p/ o eixo: <input type="number" id="cLivre" min="0" value="2"></div>
+<div class="kpi"><span>Conflitos resolvidos</span><b id="kConf">0</b></div>
+<div class="kpi"><span>Optativas na grade</span><b id="kOpt">0</b></div>
+<div class="kpi"><span>CH / créditos</span><b id="kCH">0h / 0</b></div>
+<div class="kpi"><span>Status</span><b id="kStatus">—</b></div>
+</div>
+</div>
+<div class="navbtns"><button class="btn-line" onclick="go(4)">← Etapa 4</button>
+<button class="btn-navy" onclick="go(6)">Etapa 6: Ata →</button></div>
+</div>
+
+<div class="pane" id="e6">
+<div class="stephead" style="border-left-color:var(--gold)"><h2>Etapa 6 · Ata da decisão</h2>
+<p>Documento consolidado: decisões, justificativas, grade final e pendências. Copiar e colar na ata oficial do NDE.</p></div>
+<pre id="ata"></pre>
+<div class="actions">
+<button class="btn-navy" onclick="buildAta()">Atualizar ata</button>
+<button class="btn-line" onclick="copyAta()">Copiar</button>
+<button class="btn-line" onclick="window.print()">Imprimir / PDF</button>
+<button class="btn-line" onclick="resetAll()">Limpar tudo</button>
+</div>
+<div class="navbtns"><button class="btn-line" onclick="go(5)">← Etapa 5</button><span></span></div>
+</div>
+
+</div>
+<footer>Ementas na íntegra do PPC 2026-05-19 · Sincronização em tempo real no Vercel (KV) · Profª Laura V. — FACC/UFRJ</footer>
+<script>
+const DB={"clusters": {"cl1": "Simulação e Pesquisa Operacional", "cl2": "PCP, demanda e estratégia de produção", "cl3": "Distribuição, transportes e suprimento", "cl4": "Operações internacionais e serviços", "cl5": "Estoques, armazenagem e tópicos", "cl6": "Estatística e decisão"}, "disc": [{"code": "MAC119", "title": "Matemática para Administração", "ch": "60h", "pre": "Não há", "status": "obrig", "note": "Obrigatória", "cluster": "cl6", "obrig": true, "objetivo": "<p>Geral: apresentar os aspectos fundamentais da Matemática no que concerne à modelagem de problemas em Economia e Administração.</p><p>Específicos: capacitar o aluno a compreender importantes conceitos e métodos. Capacitar o aluno a resolver problemas quantitativos práticos em Administração</p>", "ementa": "<p>Funções de uma variável real. Limites. Continuidade. Derivadas. Introdução ao cálculo integral. Aplicação do cálculo integral e do cálculo diferencial as problemáticas administrativas: preço, quantidade e rendimento de produção; margem de lucro.</p><p>LEITHOLD, Louis.  O Cálculo com Geometria Analítica , 3ª Edição, São Paulo: Editora Harbra Ltda. 1994.</p>", "bb": "<p>WEBER, Jean E.  Matemática Para Economia e Administração . 2ª Edição, São Paulo: Editora Harbra Ltda. 1986.</p>", "bc": "", "cred": 4}, {"code": "MAD211", "title": "Estatística para Administração", "ch": "60h", "pre": "MAC119", "status": "obrig", "note": "Obrigatória", "cluster": "cl6", "obrig": true, "objetivo": "<p>Apresentar aspectos fundamentais de modelagem e análise.  Capacitar ao aluno compreender e resolver problemas do dia a dia em administração.</p>", "ementa": "<p>Estatística descritiva. Elaboração de tabelas e gráficos. Calculo combinatório. Noções de probabilidade. Variáveis aleatórias discretas e continuas. Valor esperado. Amostragem e testes de hipóteses. Métodos dos mínimos quadrados e correlação.</p><p>BUSSAB, W.O. e MORETTIN, P.A.  Estatística básica, série de Métodos quantitativos .  Ed. Saraiva. 6ª edição. São Paulo. 2010</p><p>SOARES, J.F.; FARIAS, A. A. e CESAR, C.C.  Introdução à Estatística . Rio de Janeiro:  Ed. Guanabara Koogan. 1991.</p>", "bb": "<p>FREUND, J. E. &amp; SIMON, G.ª.  Estatística Aplicada – Economia, Administração e Contabilidade , Porto Alegre.: Ed.Bookman 9a edição, 1999.</p><p>STEVENSON, W.   Estatística Aplicada à Administração , São Paulo: Ed. Harbra 1986.</p>", "bc": "", "cred": 4}, {"code": "ACA228", "title": "Estatística p/Administração II", "ch": "60h", "pre": "MAD211", "status": "obrig", "note": "Obrigatória", "cluster": "cl6", "obrig": true, "objetivo": "<p>Apresentar modelos quantitativos utilizados em Administração, e os métodos de estimação, previsão e análise estatística para esses modelos. A parte operacional desses métodos será abordada preferencialmente através de exemplos.</p>", "ementa": "<p>Revisão de probabilidade e inferência estatística. Modelo de regressão simples: hipóteses, estimação (método de mínimos quadrados) e inferência (testes de hipótese e estimação de intervalos). Modelo de regressão múltipla: estimação, inferência e tópicos adicionais (teste F, avaliação da colinearidade, variáveis binárias). Falhas nas hipóteses do modelo de regressão: testes e procedimentos de estimação (heterocedasticidade: teste de Goldfeld e Quandt, autocorrelação: teste de Durbin e Watson, regressor correlacionado com o erro aleatório: equações simultâneas).</p><p>GUJARATI, D. N.  Econometria Básica , 4ª ed. Rio de Janeiro: Campus, 2006.</p><p>WOOLDRIDGE, J. M.  Introdução à Econometria  – Uma Abordagem Moderna. São Paulo: Thomson, 2005.</p>", "bb": "<p>HILL, R. C.; GRIFFITHS, W. E. e JUDGE G. G.  Econometria . São Paulo: Saraiva, 2003.</p>", "bc": "", "cred": 4}, {"code": "ACA360", "title": "Gestão Estratégica Operações", "ch": "60h", "pre": "ACA122, MAD211", "status": "obrig", "note": "Obrigatória", "cluster": "cl2", "obrig": true, "objetivo": "<p>Discutir as principais práticas gerenciais utilizadas na área de Operações como suporte à tomada de decisão, tendo como base o estudo da sua origem, de seu processo evolutivo, do estudo de metodologias e ferramentas usadas no contexto da produção e operação de bens e serviços, visando a redução do desperdício e práticas sustentáveis.</p>", "ementa": "<p>Gestão de operações e relação com a estratégia organizacional. Estratégia de operações. Objetivos de desempenho. Processos produtivos e sistemas de operações. Projeto e gestão de sistemas de operações. Decisões estruturais e infraestruturais em operações. Planejamento, programação e controle das operações. Integração entre operações, logística e demanda. Indicadores de desempenho operacional e suporte à tomada de decisão. Trade-offs operacionais.</p><p>SLACK, N.  Administração da Produção . São Paulo: Atlas, 2018.</p><p>CHASE, R. B.; JACOBS, F. R.; AQUILANO, N. J.  Administração da produção e operações para vantagens competitivas . 11. ed. São Paulo: McGraw-Hill, 2006.</p><p>Obs: Obras mais recentes poderão ser incorporadas ao longo do curso conforme indicação do docente responsável.</p>", "bb": "<p>CORRÊA, H.; CORRÊA, C.  Administração de produção e operações : uma abordagem estratégica. São Paulo: Atlas, 2011.</p>", "bc": "", "cred": 4}, {"code": "ACA301", "title": "Fundamentos de Logística", "ch": "60h", "pre": "ACA360", "status": "obrig", "note": "Obrigatória", "cluster": "cl3", "obrig": true, "objetivo": "<p>Apresentar o papel da logística e analisar a interferência de seu desempenho na geração de vantagem competitiva nas organizações, propiciando ao discente conhecimento para a tomada de decisão baseadas em práticas socioambientais.</p>", "ementa": "<p>Logística empresarial. Evolução histórica e conceitos básicos de logística. Logística como função organizacional. Atividades primárias e de apoio da logística. Integração logística e cadeia de suprimentos. Planejamento e coordenação dos fluxos logísticos. Gestão de transportes, de estoques, de armazenagem, de compras e da distribuição. Custos logísticos. Trade-offs custo–nível de serviço. Nível de serviço ao cliente. Aspectos emergentes em logística e sustentabilidade.</p><p>BALLOU, R. H.  Logística empresarial : transportes, administração de materiais, distribuição física. São Paulo: Atlas, 1993.</p><p>CHRISTOPHER, M.  Logistics  &amp;  Supply Chain Management . Prentice-Hall, 2011.</p>", "bb": "<p>BOWERSOX, D.; CLOSS, D.  Logística empresarial:  o processo de integração da cadeia de suprimento. São Paulo: Atlas, 2010.</p>", "bc": "", "cred": 4}, {"code": "ACA053", "title": "Gestão Estratégica de Compras", "ch": "60h", "pre": "ACA360", "status": "teal", "note": "Complementar", "cluster": "cl3", "obrig": false, "objetivo": "<p>Apresentar os conceitos e ferramentas de *Strategic Sourcing*, permitindo aos alunos conhecer as técnicas de classificação de fornecedores para o estabelecimento de relações adequadas de fornecimento de acordo com a criticidade dos itens para a operação de uma empresa.</p>", "ementa": "<p>Análise de Gastos (*Spend Analysis*); Definição da Importância Estratégica dos Itens Comprados; Estudo de Poder e Dependência no Relacionamento com Fornecedores; Global Sourcing; Inteligência de mercado; Desenvolvimento de Fornecedores; Estratégias de Relacionamento com Fornecedor.</p><p>OLIVEIRA, B., MATTAR, F.N., QUEIROZ, M. J., MOTA, S. L. S.  Gestão de Produtos, Serviços, Marcas e Mercados: Estratégias e Ações para Alcançar e Manter-se Top Of Market . São Paulo: Atlas, 2009.</p><p>SAUNDERS, M.  *Strategic purchasing and supply chain management *. 2. ed. London: Pitman Publishing, 1997.</p>", "bb": "<p>LEÃO, N. S.  Formação de Preços de Serviços e Produtos  São Paulo: Nobel, 2008.</p>", "bc": "", "cred": 4}, {"code": "ACA055", "title": "Planej, Prog Control Produção", "ch": "60h", "pre": "ACA360", "status": "amber", "note": "Sobrepõe ACA401", "cluster": "cl2", "obrig": false, "objetivo": "<p>Possibilitar o uso de modelos simples e eficazes para o planejamento e controle da produção finita, garantindo a disponibilidade de produtos, sem a necessidade de níveis elevados de estoque ou desperdício de recursos sociais e ambientais. Serão apresentadas e discutidas as principais ferramentas da área de Planejamento, Programação e Controle da Produção (PPCP).</p>", "ementa": "<p>Introdução ao Lean e Planejamento e Controle da Produção (PCP); Tecnologias de produto, processo e gestão; Tipos clássicos de desperdício; Teoria das restrições; Computer Integrated Manufacturing (CIM); Manufacturing Resource Planning (MRP II); Master Production Schedule (MPS); Enterprise Resource Planning (ERP); Distribution Requirement Planning (DRP); Manufacturing Execution System (MES).</p><p>SLACK, N.  Administração da Produção  São Paulo: Atlas, 2018.</p>", "bb": "<p>CORRÊA, H. L., GIANESI, I. G. N., CAON, M.  Planejamento, Programação e Controle da Produção.  São Paulo: Atlas, 2007.</p>", "bc": "", "cred": 4}, {"code": "ACA056", "title": "Tóp Contemp Gestão Operações", "ch": "30h", "pre": "ACA360", "status": "amber", "note": "Tópicos: sobrepõe ACA058/531", "cluster": "cl5", "obrig": false, "objetivo": "<p>Fornecer ao aluno conhecimentos acerca das inovações na área de operações, bem como subsídios para a tomada de decisões e o desenvolvimento de projetos de natureza prática e multidisciplinar na área.</p>", "ementa": "<p>Novas Tecnologias em Operações; Indústria 4.0; Blockchain; Principais Tendências em Compras e Produção.</p><p>STEVAN JR, S. L., LEME, M. O., SANTOS, M. M. D.  Industria 4.0: Fundamentos, Perspectivas e Aplicações.  São Paulo: Érica, 2018.</p><p>MOUGAYAR, W. Blockchain  Para Negócios : Promessa, Prática e Aplicação da Nova Tecnologia da Internet. São Paulo: Alta Books, 2017.</p>", "bb": "<p>SCHWAB, K.  A Quarta Revolução Industrial . São Paulo: Edipro, 2015.</p>", "bc": "", "cred": 2}, {"code": "ACA441", "title": "Distribuição Física", "ch": "60h", "pre": "ACA301", "status": "amber", "note": "Sobrepõe ACA463/ACA501", "cluster": "cl3", "obrig": false, "objetivo": "<p>Apresentar as ferramentas e técnicas necessárias para a adequada gestão da operação de distribuição de bens de consumo, discutindo as estratégias de canais e as etapas operacionais desde a tomada do pedido pelo cliente até a entrega dos produtos, oferecendo uma visão ampla da atividade de distribuição física como última etapa da cadeia logística.</p>", "ementa": "<p>Escopo estratégico da distribuição física; Serviço ao cliente em operações; Modelo SCOR; Estratégia de canais de distribuição; *Routes-to-market*; Redes de distribuição e aspectos tributários; Planejamento de operações e vendas; Abastecimento de CD&#x27;s e lojas; Gestão e dimensionamento de armazéns; Transporte de distribuição; Desafios da distribuição urbana de cargas; Novos formatos de venda e distribuição; Revolução digital na distribuição física.</p><p>FLEURY, P. F., FIGUEIREDO, K., WANKE, P.  Logística e Gerenciamento da Cadeia de Suprimentos.  Planejamento do Fluxo de Produtos e dos Recursos. São Paulo: Atlas, 2003.</p>", "bb": "<p>BALLOU, R. H.  Gerenciamento da Cadeia de Suprimentos . Porto Alegre: Bookman, 2005.</p>", "bc": "", "cred": 4}, {"code": "ACA057", "title": "Métod Quantit Aplic à Logístic", "ch": "60h", "pre": "ACA301", "status": "red", "note": "Quase duplicada com ACA451", "cluster": "cl1", "obrig": false, "objetivo": "<p>Apresentar ferramentas e modelos de programação matemática aplicados na resolução de problemas clássicos da área de logística, habilitando os alunos a estruturar e solucionar desafios de alta complexidade técnica em operações.</p>", "ementa": "<p>Fundamentos da pesquisa operacional; Metodologia para resolução de problemas de programação linear; Utilização da programação linear em problemas de redes logísticas; Problema do transporte; Localização de instalações e programação inteira; Modelos de dimensionamento e gestão de estoques.</p><p>HILLIER, F. S.; LIEBERMAN, G. J.  Introdução à pesquisa operacional . 9. ed. São Paulo: Saraiva, 2013.</p>", "bb": "<p>LACHTERMACHER, G.  Pesquisa operacional na tomada de decisões . São Paulo: Pearson - Prentice Hall, 2009.</p>", "bc": "", "cred": 4}, {"code": "ACA058", "title": "Tóp Contemp em Logística", "ch": "30h", "pre": "ACA301", "status": "amber", "note": "Tópicos: sobrepõe ACA056/531", "cluster": "cl5", "obrig": false, "objetivo": "<p>Apresentar e discutir temas que tem despertado interesse de acadêmicos e estudiosos no tocante à Gestão de Operações e Logística. Além de investigações teóricas, espera-se que o discente possa desenvolver atividades de pesquisa aplicada, propiciando contato com artigos atuais que tratam do assunto. Desenvolver, também, a capacidade de análise e aplicação dos conceitos e ferramentas para possíveis pesquisas, monografias ou projetos na área de Operações e Logística.</p>", "ementa": "<p>Digitalização do Supply Chain; Green Supply Chain; Logística Humanitária; Logística Virtual; Redes Colaborativas; Omnichannel; Mobilidade Urbana.</p><p>MICHEL, R. The Evolution of the Digital Supply Chain,  Logistics Management , Mai-2017.</p>", "bb": "<p>CHOPRA, S., MEINDL, P.  Gerenciamento da Cadeia de Suprimentos:  estratégia, planejamento e operações. 6. ed. São Paulo: Pearson. 2015.</p>", "bc": "", "cred": 2}, {"code": "ACA521", "title": "Sistemas de Transportes", "ch": "30h", "pre": "ACA301", "status": "teal", "note": "Complementar", "cluster": "cl3", "obrig": false, "objetivo": "<p>Apresentar aos discentes os aspectos fundamentais dos sistemas de transporte e sua infraestrutura.</p>", "ementa": "<p>Importância estratégica do transporte de cargas; Caracterização dos modais de transportes; Critérios para seleção de modais; Matriz de transportes no Brasil; Transporte intermodal; Impacto socioambiental do transporte de cargas; Gestão e dimensionamento de transporte rodoviário; Nova lei dos motoristas; Custo de frete rodoviário; Gestão de riscos em transportes; Central de controle de tráfego; Seleção de prestadores de serviços de transporte; Novas tecnologias e Desafios brasileiros.</p><p>COYLE, J. J., BARDI, E. J., NOVACK, R. A., GIBSON, B.  Transportation:  a supply chain perspective 7. ed. São Paulo: Cengage Learning, 2010.</p><p>BOWERSOX, D. J.  Logística empresarial: o processo de integração da cadeia de suprimento.  São Paulo: Atlas, 2010.</p>", "bb": "<p>RODRIGUES, P. R. A.  Introdução aos sistemas de transportes no Brasil e à logística internacional . 4. Ed. São Paulo: Aduaneiras, 2011.</p>", "bc": "", "cred": 2}, {"code": "ACA059", "title": "Gestão de Custos Logísticos", "ch": "30h", "pre": "ACA301; ACC222", "status": "teal", "note": "Complementar", "cluster": "cl3", "obrig": false, "objetivo": "<p>Apresentar e discutir os aspectos fundamentais dos custos logísticos, sua composição e os métodos de custeio mais adequados para cada situação empresarial, capacitando os alunos na apuração, análise e tomada de decisão em custos logísticos.</p>", "ementa": "<p>Custos logísticos; Custos de armazenagem e movimentação; Gestão financeira dos estoques; Custos de transportes; Custos associados aos processos logísticos; Métodos de custeio: Custeio Baseado em Atividades (ABC) e Análise Custo/Volume/Lucro (CVL); Análise Econômico Agregado (EVA); *Balanced Scorecard* (BSC).</p><p>WENKE, R.  Custos logísticos: ênfase na gestão financeira de distribuidoras de mercadorias e de transportadoras rodoviárias de cargas . Maringá: Editora MAG, 2014.</p>", "bb": "<p>FARIA, A. C. de; COSTA, M. F. G.  Gestão de custos logísticos.  São Paulo: Atlas, 2005.</p>", "bc": "", "cred": 2}, {"code": "ACA060", "title": "Planejamento de Demanda", "ch": "60h", "pre": "ACA360; ACA228", "status": "teal", "note": "Complementar", "cluster": "cl2", "obrig": false, "objetivo": "<p>Permitir ao aluno estruturar um processo de planejamento da demanda integrado entre as áreas comerciais e de operações, com o uso de ferramentas quantitativas de projeção de vendas e elaboração dos planos comerciais, de marketing, suprimentos, produção e distribuição.</p>", "ementa": "<p>Importância do Planejamento da Demanda; Séries Temporais Aplicadas à Previsão de Vendas; Modelos Causais em Planejamento da Demanda; Julgamento e Tomada de Decisão no Planejamento da Demanda; S&amp;OP (Sales &amp; Operations Planning); Programas de Resposta Rápida; CPFR (Collaborative Planning, Forecasting and Replanishment).</p><p>SEIFERT, D.  Collaborative planning, forecasting, and replenishment : how to create a supply chain advantage. New York: Amazon Publisher, 2003.</p><p>WALLACE, T. F.  Sales  &amp;  Operations Planning  -- The How-To Handbook. 12. ed., New York. Editor: T. F. Wallace &amp; company, 2002.</p>", "bb": "<p>FERREIRA, L. J., PETER, W.  Previsão de vendas:  processos organizacionais &amp; métodos quantitativos e qualitativos. Rio de Janeiro: Atlas, 2006.</p>", "bc": "", "cred": 4}, {"code": "ACA061", "title": "Gestão de Estoques", "ch": "60h", "pre": "ACA360", "status": "teal", "note": "Complementar", "cluster": "cl5", "obrig": false, "objetivo": "<p>Utilizar modelos consagrados para definir a quantidade ideal de estoques, o tamanho dos pedidos de compra e o momento ideal de realizá-los. Também serão apresentadas questões sobre posicionamento de estoques.</p>", "ementa": "<p>Tipologia e Funções dos Estoques; Principais Análises; Indicadores de Desempenho e Tendências; Ponto de Pedido e Lote Econômico; Gestão de Lote Dinâmico; Política Mini-Max; Estoque de Segurança; Simulação em Estoques; Políticas de MRO.</p><p>HONG, Y. CHING.  Gestão de estoques na cadeia de logística integrada:  supply chain. São Paulo: Atlas, 2007.</p>", "bb": "<p>WANKE, P.,  Gestão de estoque na cadeia de suprimentos:  decisões e modelos quantitativos. São Paulo: Editora Atlas, 2003.</p>", "bc": "", "cred": 4}, {"code": "ACA062", "title": "Gestão de Armazenagem", "ch": "30h", "pre": "ACA301", "status": "teal", "note": "Complementar", "cluster": "cl5", "obrig": false, "objetivo": "<p>Possibilitar o gerenciamento das as atividades de um centro de distribuição/armazém, apresentando as melhores práticas de mercado no recebimento, movimentação, guarda, separação, picking e carregamento das mercadorias. Apresentar exemplos de operações de cross-docking, hub-and-spoke, transit-point, entre outros.</p>", "ementa": "<p>Papel Estratégico da Armazenagem; Otimização de Espaço no Armazém; Decisões de Terceirização; Equipamentos e Tecnologias de Movimentação e Acondicionamento de Materiais; Tecnologias de Picking; Tópicos Especiais em Armazenagem.</p><p>TOMPKINS, J. et Al.  Facilities Planning . New York: John Willey &amp; Sons, 1996.</p><p>ACKERMAN, KEN.  Warehousing profitably: a manager`s guide . Columbus: Ackerman Publications, 1994.</p><p>TOMPKINS, J.  Warehouse Management Handbook . New York: Mcgraw-Hill, 1988.</p>", "bb": "<p>RODRIGUES, P. R. A.  Gestão estratégica da armazenagem . 2. Ed. São Paulo: Aduaneiras, 2007.</p>", "bc": "", "cred": 2}, {"code": "ACA451", "title": "Aplic Pesq Operac a Logística", "ch": "60h", "pre": "ACA360", "status": "red", "note": "Quase duplicada com ACA057", "cluster": "cl1", "obrig": false, "objetivo": "<p>acrescentar</p>", "ementa": "<p>Modelos de gestao de estoques. Modelos de programacao da producao e da expansao da capacidade. Modelos de previsao. Modelos de substituicao de equipamentos e estudo de viabilidade. Modelos de programacao de roteamento de veiculos.</p><p>acrescentar</p>", "bb": "<p>acrescentar</p>", "bc": "", "cred": 4}, {"code": "ACA431", "title": "Estratégia de Produção", "ch": "60h", "pre": "ACA301", "status": "amber", "note": "Sobrepõe estratégia de ACA360", "cluster": "cl2", "obrig": false, "objetivo": "<p>acrescentar</p>", "ementa": "<p>Estrategia de producao. Inovacao tecnologica e estrategia de producao. Gestao estrategica da producao num contexto de extrema competitividade e de intensas mudancas tecnologicas.</p><p>acrescentar</p>", "bb": "<p>acrescentar</p>", "bc": "", "cred": 4}, {"code": "ACA425", "title": "Gest Operações Internacionais", "ch": "60h", "pre": "ACA325", "status": "amber", "note": "Sobrepõe ACA455", "cluster": "cl4", "obrig": false, "objetivo": "<p>acrescentar</p>", "ementa": "<p>Analise do ambiente internacional e formulacao de estrategias internacionais da empresa. Gestao internacional: selecao de mercados; modos de penetracao nos mercados; negociacao de contratos. As empresas multinacionais e/ou transnacionais.</p><p>acrescentar</p>", "bb": "<p>acrescentar</p>", "bc": "", "cred": 4}, {"code": "ACA511", "title": "Logística Empresa de Serviços", "ch": "60h", "pre": "ACA301", "status": "teal", "note": "Complementar", "cluster": "cl4", "obrig": false, "objetivo": "<p>acrescentar</p>", "ementa": "<p>Natureza das operacoes industriais e de servicos. Sistemas de servicos: previsao de demandas; localizacao de instalacoes. Projeto e lay-out de instalacoes. Planejamento de capacidade de sistemas de servicos. Medindo e controlando a qualidade.</p><p>acrescentar</p>", "bb": "<p>acrescentar</p>", "bc": "", "cred": 4}, {"code": "ACA445", "title": "Logística Internacional", "ch": "60h", "pre": "ACA301; ACA325", "status": "teal", "note": "Complementar", "cluster": "cl4", "obrig": false, "objetivo": "<p>acrescentar</p>", "ementa": "<p>A logistica no contexto internacional. Decisoes logisticas dos exportadores. Organizacao das atividades logisticas internacionais: estrutura e coordenacao; sistema de informacoes. Financiamento e seguro das operacoes internacionais.</p><p>acrescentar</p>", "bb": "<p>acrescentar</p>", "bc": "", "cred": 4}, {"code": "ACA401", "title": "Planej e Controle Operacional", "ch": "60h", "pre": "ACA301", "status": "amber", "note": "Sobrepõe ACA055", "cluster": "cl2", "obrig": false, "objetivo": "<p>acrescentar</p>", "ementa": "<p>Conceitos e objetivos do planejamento e do controle operacional. Modelos matematicos de planejamento. Metodos heuristicos e de procura. Sistemas de informacao operacional. Planejamento e programacao. Sistemas de controle operacional.</p><p>acrescentar</p>", "bb": "<p>acrescentar</p>", "bc": "", "cred": 4}, {"code": "ACA455", "title": "Produção Internacional", "ch": "60h", "pre": "ACA325; ACA301", "status": "amber", "note": "Sobrepõe ACA425", "cluster": "cl4", "obrig": false, "objetivo": "<p>acrescentar</p>", "ementa": "<p>Internacionalizacao da funcao de producao. Principais fatores de producao e seu mercado. Principais sistemas de producao internacional. Localizacao da producao. Comportamento de grandes setores industriais.</p><p>acrescentar</p>", "bb": "<p>acrescentar</p>", "bc": "", "cred": 4}, {"code": "ACA463", "title": "Seleção de Canais Distribuição", "ch": "60h", "pre": "ACA301", "status": "amber", "note": "Subconjunto de ACA441", "cluster": "cl3", "obrig": false, "objetivo": "<p>acrescentar</p>", "ementa": "<p>Distribuicao. Selecao de canais. Implantacao do sistema de distribuicao. Controle e remodelagem dos canais de distribuicao.</p><p>acrescentar</p>", "bb": "<p>acrescentar</p>", "bc": "", "cred": 4}, {"code": "ACA501", "title": "Seminários em Distribuição", "ch": "60h", "pre": "ACA301", "status": "amber", "note": "Sobrepõe ACA441", "cluster": "cl3", "obrig": false, "objetivo": "<p>acrescentar</p>", "ementa": "<p>Escopo da atividade de distribuicao. Planejamento e controle de sistemas de distribuicao. Custos de distribuicao. Projetos de redes e localizacao de armazens. Programacao e roteamento de veiculos. Manutencao e renovacao de frota.</p><p>acrescentar</p>", "bb": "<p>acrescentar</p>", "bc": "", "cred": 4}, {"code": "ACA531", "title": "Tóp Especiais de Logística", "ch": "60h", "pre": "ACA301", "status": "amber", "note": "Tópicos: sobrepõe ACA056/058", "cluster": "cl5", "obrig": false, "objetivo": "<p>Aprimorar tópicos diversos e contemporâneos de Logística.</p>", "ementa": "<p>Tema de interesse atual. Conteúdo variável.</p>", "bb": "<p>A designar. Cada docente responsável pela disciplina designará uma bibliografia condizente com o tema que tratará.</p>", "bc": "", "cred": 4}, {"code": "ACA124", "title": "Pesquisa Operacional", "ch": "60h", "pre": "MAC119", "status": "teal", "note": "Complementar", "cluster": "cl1", "obrig": false, "objetivo": "<p>Geral: apresentar os aspectos fundamentais de modelagem determinística e teoria dos jogos aplicada à Administração.</p><p>Específicos: capacitar o aluno a compreender importantes métodos quantitativos aplicados; capacitar o aluno a resolver problemas quantitativos práticos em Administração.</p>", "ementa": "<p>Introdução à modelagem determinística aplicada à Administração; formulação de modelos; introdução a modelos de programação linear e método simplex; dualidade e interpretação econômica; problemas de transporte e alocação; fluxo em redes; PERT-CPM; teoria dos jogos.</p><p>ARENALES, M.; ARMENTANO, V.; MORABITO, R.; YANASSE H..  Pesquisa Operacional . Rio de Janeiro: Ed. Elsevier, 2ª edição, 2015.</p><p>COLLIN, Emerson C..  Pesquisa Operacional . São Paulo: Ed. Atlas, 2ª edição, 2017.</p><p>FIANI, Ronaldo.  Teoria dos Jogos . 3ª edição. Rio de Janeiro: Campus, 2009.</p><p>SOLODÓNIKOV, A. S..  Sistemas de Desigualdades Lineales . Moscou: Editora Mir, 1980.</p><p>STRANG, Gilbert.  Álgebra Linear e Suas Aplicações . São Paulo: Cengage, 2010.</p>", "bb": "<p>HILLIER, Frederik. S; LIEBERMAN, Gerald. J.  Introdução à Pesquisa Operacional . 9ª edição. São Paulo: Amgh Editora, 2013.</p>", "bc": "", "cred": 4}, {"code": "ACA330", "title": "Modelagem e Simulação Sistemas", "ch": "60 horas", "pre": "MAD211", "status": "red", "note": "Quase duplicada com ACA461", "cluster": "cl1", "obrig": false, "objetivo": "<p>Ao final do curso, o aluno será capaz de conhecer as principais técnicas de simulação bem como suas aplicações. Além disso, o discente terá capacidade de conduzir e gerenciar um estudo de simulação, compreendendo todas as etapas necessárias para que a análise seja bem-sucedida.</p>", "ementa": "<p>Conceito de sistema, modelo e simulação de sistemas. Etapas da simulação. Linguagem da simulação discreta e de simulação contínua. Técnicas de simulação. Validação e implementação dos modelos.</p><p>BATEMAN *et al.* Simulação de Sistemas: aprimorando processos de logística, serviços e manufatura. 1 ed. Rio de Janeiro: Elsevier, 2013.</p><p>ANDRADE. Introdução à Pesquisa Operacional: métodos e modelos para análise de decisões. 5 ed. Rio de Janeiro: LTC, 2018.</p>", "bb": "<p>CHWIF &amp; MEDINA. Simulação de Eventos Discretos: teoria e aplicações. 4 ed. Rio de Janeiro: Elsevier, 2015.</p>", "bc": "", "cred": 4}, {"code": "ACA227", "title": "Modelos Probabilísticos em Adm", "ch": "60 horas", "pre": "MAC119", "status": "amber", "note": "Sobrepõe modelos de estoque", "cluster": "cl5", "obrig": false, "objetivo": "<p>Ao final da disciplina, o aluno deverá ter condições de organizar e descrever conjuntos de dados e compreender a quantificação de incertezas no contexto da Administração de Empresas.</p>", "ementa": "<p>Eventos e probabilidade. Variáveis aleatórias. Processos probabilísticos. Processos markovianos. Árvore de decisão. Modelos de estoque. Teoria de filas e aplicações. Ênfase nas aplicações administrativas e uso de softwares variados.</p><p>A First Course in Probability. Sheldon Ross – qualquer edição.</p><p>Estatística Básica. P. A. Morettin, W. O. Bussab - 2010</p>", "bb": "<p>Estatística Aplicada à Administração e Economia. David R. Anderson, Dennis J. Sweeney, Thomas A. Williams, Jeffrey D. Camm e James J. Cochran – qualquer edição.</p>", "bc": "", "cred": 4}, {"code": "ACA482", "title": "Introdução à Econometria", "ch": "60h", "pre": "ACA228", "status": "amber", "note": "Avança sobre ACA228", "cluster": "cl6", "obrig": false, "objetivo": "<p>Aprofundar o conhecimento em modelos econométricos, aplicados sobretudo à Finanças.</p>", "ementa": "<p>Recordação de lógica Matemática e Algoritmos. Séries Temporais Financeiras. Revisão de Séries de tempo Lineares e suas Aplicações. Modelos de Heterocedasticidade Condicional. Modelos de Volatilidade Estocástica com Memória Longa. Modelos não Lineares. Foco em tópicos atuais e que estejam em voga no mercado para exemplificação de modelos.</p><p>GUJARATI, D. N.  Econometria Básica , 4ª ed. Rio de Janeiro: Campus, 2006.</p><p>WOOLDRIDGE, J. M.  Introdução à Econometria  – Uma Abordagem Moderna. São</p>", "bb": "<p>HILL, R. C.; GRIFFITHS, W. E. e JUDGE G. G.  Econometria . São Paulo: Saraiva, 2003.</p>", "bc": "", "cred": 4}, {"code": "ACA461", "title": "Simulação de Sist Operacionais", "ch": "60h", "pre": "ACA228", "status": "red", "note": "Quase duplicada com ACA330", "cluster": "cl1", "obrig": false, "objetivo": "<p>acrescentar</p>", "ementa": "<p>A metodologia de simulacao. Tecnica de Monte Carlo. Geracao de variaveis aleatorias. Simulacao de eventos discretos. Desenvolvimento do modelo. Validacao do modelo. Projeto de experimentos de simulacao e avaliacao de resultados.</p><p>acrescentar</p>", "bb": "<p>acrescentar</p>", "bc": "", "cred": 4}, {"code": "ACA224", "title": "Processo Decisório", "ch": "60 h", "pre": "não há", "status": "teal", "note": "Complementar", "cluster": "cl6", "obrig": false, "objetivo": "<p>Apresentar os fundamentos teóricos que embasam a análise de estruturas e sistemas decisórios em contextos organizacionais, com ênfase na discussão da complexidade dos processos de julgamento. Investigar a dicotomia entre as abordagens racional e comportamental do processo decisório em organizações, por intermédio de um confronto entre as perspectivas teóricas prescritiva e descritiva da decisão. Desenvolver uma apreciação crítica de aspectos teórico-práticos decorrentes dos recentes avanços na pesquisa do processo decisório, bem como debater a prática da tomada de decisão a partir de estudos empíricos.</p>", "ementa": "<p>Principais vertentes teóricas do processo decisório em Administração. Modelos decisórios racionais: modelo clássico; processo decisório nas estruturas; poder decisório sob condições de poder. Abordagem comportamental: heurísticas de julgamento; vieses cognitivos; conscientização limitada; formulação e inversão de preferências; influências motivacionais e emocionais; ética e decisão: árvore de decisão; aplicação de ferramentas, metodologia multicritério; problemas e axiomas.</p><p>BAZERMAN,M.H.;MOORE,D.  Processo Decisório.  8.ed. Rio de Janeiro: Elsevier, 2015.</p><p>YU, A.  Tomada de Decisão nas Organizações : uma visão multidisciplinar. São Paulo: Saraiva, 2011.</p>", "bb": "<p>FONTANILLAS, C.N.; BARRETO, C.R.; CRUZ, E.P.  O Processo Decisório nas Organizações . 2.ed. Parana: Intersaberes, 2020.</p>", "bc": "", "cred": 4}], "fusoes": [{"id": "F1", "alvo": ["ACA330", "ACA461"], "nome": "Modelagem e Simulação (fusão)", "just": "Ementas quase idênticas: etapas da simulação, simulação discreta, validação de modelos"}, {"id": "F2", "alvo": ["ACA057", "ACA451"], "nome": "PO Aplicada à Logística (fusão)", "just": "Ambas: programação linear, transporte, localização, modelos de estoque"}, {"id": "F3", "alvo": ["ACA056", "ACA058", "ACA531"], "nome": "Tópicos Contemporâneos Oper/Log (fusão)", "just": "Três disciplinas de ementa variável na mesma ênfase; DCN pede 1 por ênfase"}, {"id": "F4", "alvo": ["ACA441", "ACA463", "ACA501"], "nome": "Distribuição Física e Canais (fusão)", "just": "ACA463 subconjunto de ACA441; ACA501 repete custos/roteamento"}, {"id": "F5", "alvo": ["ACA425", "ACA455"], "nome": "Operações Internacionais (fusão)", "just": "Internacionalização da produção, localização e mercados nas duas"}, {"id": "F6", "alvo": ["ACA055", "ACA401"], "nome": "PCP (fusão)", "just": "PCP e programação nas duas; ACA401 acrescenta modelos matemáticos"}], "rels": [["ACA330", "ACA461", "dup", "mesma ementa: simulação discreta, etapas, validação"], ["ACA057", "ACA451", "dup", "mesma base: PL, transporte, localização, estoques"], ["ACA057", "ACA124", "sob", "ACA057 aplica a PO de ACA124 à logística"], ["ACA451", "ACA124", "sob", "ACA451 aplica a PO de ACA124 à logística"], ["ACA055", "ACA401", "sob", "PCP nas duas; ACA401 soma modelos matemáticos"], ["ACA055", "ACA060", "comp", "ACA060 aprofunda a previsão usada no PCP"], ["ACA431", "ACA360", "sob", "estratégia de produção repete núcleo da GEO"], ["ACA463", "ACA441", "sub", "ACA463 é subconjunto de ACA441 (canais)"], ["ACA501", "ACA441", "sob", "repete custos e roteamento de distribuição"], ["ACA521", "ACA441", "comp", "modais alimentam o desenho da distribuição"], ["ACA059", "ACA441", "comp", "custos dos processos de distribuição"], ["ACA425", "ACA455", "dup", "internacionalização da produção nas duas"], ["ACA445", "ACA425", "comp", "foco em exportação e logística internacional"], ["ACA056", "ACA058", "dup", "tópicos variáveis na mesma ênfase"], ["ACA058", "ACA531", "dup", "tópicos variáveis na mesma ênfase"], ["ACA061", "ACA062", "comp", "estoques e armazenagem se completam"], ["ACA227", "ACA061", "sob", "modelos de estoque repetem ACA061/ACA451"], ["ACA227", "MAD211", "comp", "aprofunda probabilidade de MAD211"], ["ACA482", "ACA228", "sob", "avança regressão/séries de ACA228"], ["ACA053", "ACA301", "comp", "compras estende a cadeia de suprimentos"], ["ACA060", "ACA360", "comp", "previsão de demanda apoia a GEO"], ["ACA511", "ACA360", "comp", "operações de serviços complementa GEO"], ["ACA224", "ACA124", "comp", "decisão comportamental × decisão quantitativa"]], "relmap": {"ACA330": [{"com": "ACA461", "tipo": "dup", "desc": "mesma ementa: simulação discreta, etapas, validação"}], "ACA461": [{"com": "ACA330", "tipo": "dup", "desc": "mesma ementa: simulação discreta, etapas, validação"}], "ACA057": [{"com": "ACA451", "tipo": "dup", "desc": "mesma base: PL, transporte, localização, estoques"}, {"com": "ACA124", "tipo": "sob", "desc": "ACA057 aplica a PO de ACA124 à logística"}], "ACA451": [{"com": "ACA057", "tipo": "dup", "desc": "mesma base: PL, transporte, localização, estoques"}, {"com": "ACA124", "tipo": "sob", "desc": "ACA451 aplica a PO de ACA124 à logística"}], "ACA124": [{"com": "ACA057", "tipo": "sob_por", "desc": "ACA057 aplica a PO de ACA124 à logística"}, {"com": "ACA451", "tipo": "sob_por", "desc": "ACA451 aplica a PO de ACA124 à logística"}, {"com": "ACA224", "tipo": "comp", "desc": "decisão comportamental × decisão quantitativa"}], "ACA055": [{"com": "ACA401", "tipo": "sob", "desc": "PCP nas duas; ACA401 soma modelos matemáticos"}, {"com": "ACA060", "tipo": "comp", "desc": "ACA060 aprofunda a previsão usada no PCP"}], "ACA401": [{"com": "ACA055", "tipo": "sob_por", "desc": "PCP nas duas; ACA401 soma modelos matemáticos"}], "ACA060": [{"com": "ACA055", "tipo": "comp", "desc": "ACA060 aprofunda a previsão usada no PCP"}, {"com": "ACA360", "tipo": "comp", "desc": "previsão de demanda apoia a GEO"}], "ACA431": [{"com": "ACA360", "tipo": "sob", "desc": "estratégia de produção repete núcleo da GEO"}], "ACA360": [{"com": "ACA431", "tipo": "sob_por", "desc": "estratégia de produção repete núcleo da GEO"}, {"com": "ACA060", "tipo": "comp", "desc": "previsão de demanda apoia a GEO"}, {"com": "ACA511", "tipo": "comp", "desc": "operações de serviços complementa GEO"}], "ACA463": [{"com": "ACA441", "tipo": "sub", "desc": "ACA463 é subconjunto de ACA441 (canais)"}], "ACA441": [{"com": "ACA463", "tipo": "contem", "desc": "ACA463 é subconjunto de ACA441 (canais)"}, {"com": "ACA501", "tipo": "sob_por", "desc": "repete custos e roteamento de distribuição"}, {"com": "ACA521", "tipo": "comp", "desc": "modais alimentam o desenho da distribuição"}, {"com": "ACA059", "tipo": "comp", "desc": "custos dos processos de distribuição"}], "ACA501": [{"com": "ACA441", "tipo": "sob", "desc": "repete custos e roteamento de distribuição"}], "ACA521": [{"com": "ACA441", "tipo": "comp", "desc": "modais alimentam o desenho da distribuição"}], "ACA059": [{"com": "ACA441", "tipo": "comp", "desc": "custos dos processos de distribuição"}], "ACA425": [{"com": "ACA455", "tipo": "dup", "desc": "internacionalização da produção nas duas"}, {"com": "ACA445", "tipo": "comp", "desc": "foco em exportação e logística internacional"}], "ACA455": [{"com": "ACA425", "tipo": "dup", "desc": "internacionalização da produção nas duas"}], "ACA445": [{"com": "ACA425", "tipo": "comp", "desc": "foco em exportação e logística internacional"}], "ACA056": [{"com": "ACA058", "tipo": "dup", "desc": "tópicos variáveis na mesma ênfase"}], "ACA058": [{"com": "ACA056", "tipo": "dup", "desc": "tópicos variáveis na mesma ênfase"}, {"com": "ACA531", "tipo": "dup", "desc": "tópicos variáveis na mesma ênfase"}], "ACA531": [{"com": "ACA058", "tipo": "dup", "desc": "tópicos variáveis na mesma ênfase"}], "ACA061": [{"com": "ACA062", "tipo": "comp", "desc": "estoques e armazenagem se completam"}, {"com": "ACA227", "tipo": "sob_por", "desc": "modelos de estoque repetem ACA061/ACA451"}], "ACA062": [{"com": "ACA061", "tipo": "comp", "desc": "estoques e armazenagem se completam"}], "ACA227": [{"com": "ACA061", "tipo": "sob", "desc": "modelos de estoque repetem ACA061/ACA451"}, {"com": "MAD211", "tipo": "comp", "desc": "aprofunda probabilidade de MAD211"}], "MAD211": [{"com": "ACA227", "tipo": "comp", "desc": "aprofunda probabilidade de MAD211"}], "ACA482": [{"com": "ACA228", "tipo": "sob", "desc": "avança regressão/séries de ACA228"}], "ACA228": [{"com": "ACA482", "tipo": "sob_por", "desc": "avança regressão/séries de ACA228"}], "ACA053": [{"com": "ACA301", "tipo": "comp", "desc": "compras estende a cadeia de suprimentos"}], "ACA301": [{"com": "ACA053", "tipo": "comp", "desc": "compras estende a cadeia de suprimentos"}], "ACA511": [{"com": "ACA360", "tipo": "comp", "desc": "operações de serviços complementa GEO"}], "ACA224": [{"com": "ACA124", "tipo": "comp", "desc": "decisão comportamental × decisão quantitativa"}]}};
+const CONFLICTS=[
+ {id:'C1',tipo:'dup',codes:['ACA330','ACA461'],titulo:'Simulação: duas disciplinas, mesma ementa',why:'Etapas da simulação, simulação discreta e validação de modelos nas duas.'},
+ {id:'C2',tipo:'dup',codes:['ACA057','ACA451'],titulo:'PO aplicada à Logística em dobro',why:'Programação linear, transporte, localização e estoques nas duas.'},
+ {id:'C3',tipo:'dup',codes:['ACA056','ACA058','ACA531'],titulo:'Três "Tópicos" na mesma ênfase',why:'Ementa variável em triplicata; a DCN pede 1 Tópicos por ênfase.'},
+ {id:'C5',tipo:'dup',codes:['ACA425','ACA455'],titulo:'Operações internacionais em dobro',why:'Internacionalização da produção, localização e mercados nas duas.'},
+ {id:'C4',tipo:'sob',codes:['ACA441','ACA463','ACA501'],titulo:'Distribuição: matriz e dois recortes',why:'ACA463 é subconjunto de ACA441; ACA501 repete custos e roteamento.'},
+ {id:'C6',tipo:'sob',codes:['ACA055','ACA401'],titulo:'PCP em duas versões',why:'Planejamento e programação nas duas; ACA401 acrescenta modelos matemáticos.'},
+ {id:'C7',tipo:'sob',codes:['ACA431','ACA360'],titulo:'Estratégia de Produção × GEO (obrigatória)',why:'O núcleo de estratégia de operações já está na obrigatória ACA360.',fixo:'ACA360'},
+ {id:'C8',tipo:'sob',codes:['ACA227','ACA061'],titulo:'Modelos de estoque repetidos',why:'ACA227 (probabilísticos) repete modelos de estoque de ACA061.'},
+ {id:'C9',tipo:'sob',codes:['ACA482','ACA228'],titulo:'Econometria × Estatística II (obrigatória)',why:'ACA482 avança a regressão/séries de ACA228.',fixo:'ACA228'},
+];
+let S={conf:{},rev:{},grade:{},votes:{},votelog:{},version:0,cOpt:6,cLivre:2,step:1};
+const PEOPLE=['Laura','Carlos','Camila'];
+let WHO=localStorage.getItem('ppc_who')||'';
+function setWho(v){WHO=v;localStorage.setItem('ppc_who',v);renderAll();go(S.step,true);}
+const LS='ppc_linha_v5';let remote=false,saveTimer=null;
+const STEPS=[[1,'Diagnóstico'],[2,'Duplicações'],[3,'Sobreposições'],[4,'Complementares'],[5,'Grade'],[6,'Ata']];
+function migrate(j){ // compatibilidade com estado salvo da v6
+ j.conf=j.conf||{};j.rev=j.rev||{};j.grade=j.grade||{};j.votes=j.votes||{};
+ j.votelog=j.votelog||{};if(typeof j.version!=='number')j.version=0;
+ if(!j.cOpt&&j.cOpt!==0)j.cOpt=6;if(!j.cLivre&&j.cLivre!==0)j.cLivre=2;return j;}
+function setSync(ok){const e=document.getElementById('sync');
+ if(ok){e.textContent='Sincronizado '+new Date().toLocaleTimeString('pt-BR');e.className='on';}
+ else{e.textContent='Modo local (sem KV)';e.className='';}}
+async function init(){
+ try{const r=await fetch('/api/state');if(r.ok){const j=await r.json();if(j&&j.conf)S=migrate(j);remote=true;
+  setSync(true);setInterval(poll,4000);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll();});}}catch(e){}
+ if(!remote){setSync(false);try{const j=JSON.parse(localStorage.getItem(LS));if(j&&j.conf)S=migrate(j);}catch(e){}}
+ if(WHO)document.getElementById('who').value=WHO;computeDecisions();renderAll();go(S.step||1,true);}
+async function poll(){if(document.hidden)return; // pausa quando a aba está oculta
+ try{const r=await fetch('/api/state');if(r.ok){const j=await r.json();setSync(true);
+ if(j&&j.conf&&JSON.stringify(j)!==JSON.stringify(S)){const st=S.step;S=migrate(j);S.step=st;computeDecisions();renderAll();go(S.step,true);}}}catch(e){}}
+function mergeRemote(R){ // votos remotos prevalecem por membro; nunca apagar voto de outro membro
+ R=migrate(R);const localVotes=S.votes||{},localLog=S.votelog||{},st=S.step;
+ for(const id in localVotes){R.votes[id]=R.votes[id]||{};
+  for(const p in localVotes[id]){if(p===WHO||!R.votes[id][p])R.votes[id][p]=localVotes[id][p];}}
+ for(const id in localLog){R.votelog[id]=R.votelog[id]||[];
+  (localLog[id]||[]).forEach(e=>{if(!R.votelog[id].some(x=>x.ts===e.ts&&x.who===e.who))R.votelog[id].push(e);});}
+ R.step=st;S=R;}
+async function pushState(isRetry){
+ try{const r=await fetch('/api/state',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(S)});
+  if(r.status===409&&!isRetry){const cur=await r.json();mergeRemote(cur);
+   computeDecisions();renderAll();go(S.step,true);return pushState(true);}
+  if(r.ok){const j=await r.json();if(j&&typeof j.version==='number')S.version=j.version;setSync(true);}
+ }catch(e){}}
+function save(){if(remote){clearTimeout(saveTimer);saveTimer=setTimeout(()=>pushState(false),400);}else localStorage.setItem(LS,JSON.stringify(S));}
+function D(c){return DB.disc.find(x=>x.code===c)||{};}
+function dupPend(){return CONFLICTS.filter(c=>c.tipo==='dup'&&!(S.conf[c.id]&&S.conf[c.id].mode)).length;}
+function allPend(){return CONFLICTS.filter(c=>!(S.conf[c.id]&&S.conf[c.id].mode)).length;}
+function stepDone(n){
+ if(n===1)return true;
+ if(n===2)return dupPend()===0;
+ if(n===3)return CONFLICTS.filter(c=>c.tipo==='sob'&&!(S.conf[c.id]&&S.conf[c.id].mode)).length===0;
+ if(n===4)return DB.disc.filter(d=>!d.obrig&&!inConflict(d.code)).every(d=>S.rev[d.code]);
+ if(n===5){const alvo=S.cOpt+S.cLivre;return Object.keys(S.grade).length===alvo&&allPend()===0;}
+ return false;}
+function renderSteps(){
+ const el=document.getElementById('steps');el.innerHTML='';
+ STEPS.forEach(([n,name])=>{
+  const cls='step'+(S.step===n?' on':'')+(stepDone(n)&&S.step!==n?' done':'');
+  el.innerHTML+=`<div class="${cls}" onclick="go(${n})"><span class="n">${stepDone(n)&&S.step!==n?'✓':n}</span>${name}</div>`;});}
+function go(n,silent){S.step=n;if(!silent)save();
+ document.querySelectorAll('.pane').forEach(p=>p.classList.remove('on'));
+ document.getElementById('e'+n).classList.add('on');
+ document.getElementById('gate3').classList.toggle('show',n===3&&dupPend()>0);
+ document.getElementById('gate5').classList.toggle('show',n===5&&allPend()>0);
+ renderSteps();window.scrollTo({top:0});}
+function sideHTML(c,dec){
+ const d=D(c);let cls='side';
+ if(dec){if(dec.keep&&dec.keep.includes(c))cls+=' win';
+ else if(dec.mode==='manter')cls+=' lose';else if(dec.mode==='fundir')cls+=' lose';}
+ return `<div class="${cls}"><h3>${c} — ${d.title||''}</h3>
+ <div class="meta">${d.ch||'60h'} · ${d.cred||4} créd · Pré-req: ${d.pre||'não há'} ${d.obrig?'· <b>OBRIGATÓRIA</b>':''}</div>
+ <h4>Ementa</h4>${d.ementa||'<p>—</p>'}
+ <details><summary>Objetivo e bibliografia</summary><h4>Objetivo</h4>${d.objetivo||''}<h4>Bibliografia básica</h4>${d.bb||''}<h4>Complementar</h4>${d.bc||''}</details></div>`;}
+function confCard(cf){
+ const dec=S.conf[cf.id];const vs=(S.votes&&S.votes[cf.id])||{};
+ const box=document.createElement('div');box.className='conf';
+ const nv=PEOPLE.filter(p=>vs[p]).length;
+ const decided=dec&&dec.mode;
+ const stTxt=decided?(dec.mode==='fundir'?'FUNDIR':dec.mode==='ambas'?'manter todas':'manter '+dec.keep.join(', '))+(dec.by?' · '+dec.by:''):nv?'aguardando votos ('+nv+'/3)':'pendente';
+ let duel='<div class="duel'+(cf.codes.length===3?' tri':'')+'">';
+ cf.codes.forEach(c=>duel+=sideHTML(c,decided?dec:null));duel+='</div>';
+ // options list
+ let opts=[];
+ if(cf.fixo){const opt=cf.codes.find(c=>c!==cf.fixo);
+  opts=[{m:'manter',k:cf.fixo,lbl:'Excluir '+opt},{m:'ambas',k:'',lbl:'Manter '+opt}];}
+ else{cf.codes.forEach(c=>opts.push({m:'manter',k:c,lbl:'Só '+c}));
+  opts.push({m:'fundir',k:'',lbl:'Fundir'});opts.push({m:'ambas',k:'',lbl:'Todas'});}
+ const myv=WHO&&vs[WHO];
+ let btns='';opts.forEach(o=>{
+  const on=myv&&voteKey(myv.mode,myv.keep&&myv.keep[0])===voteKey(o.m,o.k);
+  const cls=o.m==='fundir'?'fus':o.m==='ambas'?'both':'';
+  btns+=`<button class="${cls} ${on?'on':''}" onclick="decide('${cf.id}','${o.m}','${o.k}')">${o.lbl}</button>`;});
+ // votes row
+ const vlbl=v=>!v?'—':v.mode==='fundir'?'fundir':v.mode==='ambas'?'todas':'só '+v.keep[0];
+ let vrow='';PEOPLE.forEach(p=>{const v=vs[p];
+  vrow+=`<span class="vt"><b>${p}:</b><span class="vchip ${v?'v-set':''}">${vlbl(v)}</span></span>`;});
+ // consensus chip
+ let cons='cs-wait',ctxt='aguardando votos';
+ if(nv>=2){const ks=PEOPLE.map(p=>vs[p]).filter(Boolean).map(v=>voteKey(v.mode,v.keep&&v.keep[0]));
+  const uniq=[...new Set(ks)];
+  if(uniq.length===1&&nv===3){cons='cs-full';ctxt='consenso 3/3';}
+  else if(uniq.length===1&&nv===2){cons='cs-maj';ctxt='maioria parcial (2/3), aguardando 3º voto';}
+  else if(decided&&dec.by&&(dec.by.startsWith('maioria')||dec.by.startsWith('consenso'))){cons='cs-maj';ctxt=dec.by;}
+  else if(uniq.length===nv&&nv===3){cons='cs-div';ctxt='DIVERGENTE — arbitrar';}
+  else{cons='cs-maj';ctxt=nv<3?'votos divididos ('+nv+'/3), aguardando 3º voto':'maioria parcial';}}
+ if(dec&&dec.override){cons='cs-maj';ctxt=dec.by||'arbitrado pela coordenação';}
+ let arb='';
+ if(ctxt.startsWith('DIVERGENTE')){
+  arb='<div style="width:100%;font-size:.7rem;color:var(--red);font-weight:600">Arbitragem (Laura): '+
+  opts.map(o=>`<button style="margin:2px;padding:4px 10px;font-size:.66rem" onclick="overrideDec('${cf.id}','${o.m}','${o.k}')">${o.lbl}</button>`).join('')+'</div>';}
+ if(!decided&&WHO==='Laura'&&partialMajority(cf.id)){
+  arb+=`<button style="margin-left:8px;padding:4px 12px;font-size:.68rem;font-weight:700;border:1px solid var(--amber);background:var(--amberbg);color:var(--amber);border-radius:7px;cursor:pointer" onclick="closeWith2('${cf.id}')">Fechar com 2 votos</button>`;}
+ box.innerHTML=`<div class="cfhead ${cf.tipo==='dup'?'h-dup':'h-sob'}"><b>${cf.id} · ${cf.titulo}</b>
+ <span class="cfstate">${stTxt}</span><span class="why">${cf.why}</span></div>${duel}
+ <div class="cfact"><span style="font-size:.68rem;color:var(--mut);font-weight:700">Meu voto:</span>${btns}
+ <input class="just" placeholder="Justificativa consolidada (vai para a ata)..." value="${dec&&dec.just?dec.just.replace(/"/g,'&quot;'):''}" onchange="setJust('${cf.id}',this.value)"></div>
+ <div class="votes">${vrow}<span class="consensus ${cons}">${ctxt}</span>${arb}</div>`;
+ return box;}
+function renderConfs(){
+ const nw=!WHO?'block':'none';document.getElementById('nw2').style.display=nw;document.getElementById('nw3').style.display=nw;
+ const d2=document.getElementById('confDup');d2.innerHTML='';
+ CONFLICTS.filter(c=>c.tipo==='dup').forEach(cf=>d2.appendChild(confCard(cf)));
+ const d3=document.getElementById('confSob');d3.innerHTML='';
+ CONFLICTS.filter(c=>c.tipo==='sob').forEach(cf=>d3.appendChild(confCard(cf)));
+ document.getElementById('s_dup').textContent=CONFLICTS.filter(c=>c.tipo==='dup').length;
+ document.getElementById('s_sob').textContent=CONFLICTS.filter(c=>c.tipo==='sob').length;
+ document.getElementById('s_free').textContent=DB.disc.filter(d=>!d.obrig&&!inConflict(d.code)).length;
+ document.getElementById('next2').disabled=dupPend()>0;}
+function voteKey(mode,keep){return mode+':'+(keep||'');}
+function voteLabel(v){return !v?'—':v.mode==='fundir'?'fundir':v.mode==='ambas'?'todas':'só '+(v.keep&&v.keep[0]||'');}
+function logVote(id,anterior,novo,ts){if(!S.votelog)S.votelog={};if(!S.votelog[id])S.votelog[id]=[];
+ S.votelog[id].push({who:WHO,anterior,novo,ts});}
+function decide(id,mode,keep){
+ if(!WHO){alert('Selecione quem você é no topo (Laura, Carlos ou Camila) antes de votar.');return;}
+ if(!S.votes)S.votes={};if(!S.votes[id])S.votes[id]={};
+ const cur=S.votes[id][WHO];const k=voteKey(mode,keep);const ts=new Date().toISOString();
+ if(cur&&voteKey(cur.mode,cur.keep&&cur.keep[0])===k){delete S.votes[id][WHO];logVote(id,voteLabel(cur),'— (voto retirado)',ts);}
+ else{const cf=CONFLICTS.find(x=>x.id===id);
+  const nv={mode,keep:mode==='manter'?[keep]:mode==='ambas'?cf.codes.slice():[],ts};
+  if(cur)logVote(id,voteLabel(cur),voteLabel(nv),ts);
+  S.votes[id][WHO]=nv;}
+ computeDecisions();save();renderAll();go(S.step,true);}
+function computeDecisions(){
+ CONFLICTS.forEach(cf=>{
+  const vs=(S.votes&&S.votes[cf.id])||{};
+  const arr=PEOPLE.map(p=>vs[p]).filter(Boolean);
+  const just=S.conf[cf.id]&&S.conf[cf.id].just||'';
+  const over=S.conf[cf.id]&&S.conf[cf.id].override;
+  if(over){return;}
+  // quórum 3/3: decisão automática só fecha com os 3 votos registrados
+  if(arr.length<3){if(S.conf[cf.id]&&!S.conf[cf.id].override)delete S.conf[cf.id];if(just)S.conf[cf.id]={mode:'',keep:[],just,pending:true};return;}
+  const count={};arr.forEach(v=>{const k=voteKey(v.mode,v.keep&&v.keep[0]);count[k]=(count[k]||0)+1;});
+  let best=null,bn=0;for(const[k,n]of Object.entries(count)){if(n>bn){bn=n;best=k;}}
+  if(bn>=2){const[mode,keep]=best.split(':');const cf2=CONFLICTS.find(x=>x.id===cf.id);
+   S.conf[cf.id]={mode,keep:mode==='manter'?[keep]:mode==='ambas'?cf2.codes.slice():[],just,by:bn===3?'consenso 3/3':'maioria 2/3'};}
+  else{if(S.conf[cf.id]&&!S.conf[cf.id].override)delete S.conf[cf.id];if(just)S.conf[cf.id]={mode:'',keep:[],just,pending:true};}
+ });
+ // clean grade of dead codes
+ CONFLICTS.forEach(cf=>{cf.codes.forEach(c=>{if(!alive(c))delete S.grade[c];});
+  if(!(S.conf[cf.id]&&S.conf[cf.id].mode==='fundir'))delete S.grade['FUS_'+cf.id];});}
+function partialMajority(id){ // 2 votos iguais, faltando o 3º
+ const vs=(S.votes&&S.votes[id])||{};const arr=PEOPLE.map(p=>vs[p]).filter(Boolean);
+ if(arr.length!==2)return null;
+ const k1=voteKey(arr[0].mode,arr[0].keep&&arr[0].keep[0]),k2=voteKey(arr[1].mode,arr[1].keep&&arr[1].keep[0]);
+ return k1===k2?k1:null;}
+function closeWith2(id){
+ if(WHO!=='Laura'){alert('Somente a coordenação (Laura) pode fechar com 2 votos.');return;}
+ const k=partialMajority(id);if(!k)return;
+ const cf=CONFLICTS.find(x=>x.id===id);const just=S.conf[id]&&S.conf[id].just||'';
+ const[mode,keep]=k.split(':');
+ S.conf[id]={mode,keep:mode==='manter'?[keep]:mode==='ambas'?cf.codes.slice():[],just,override:true,by:'fechado pela coordenação com 2/3',ts:new Date().toISOString()};
+ cf.codes.forEach(c=>{if(!alive(c))delete S.grade[c];});
+ save();renderAll();go(S.step,true);}
+function overrideDec(id,mode,keep){
+ if(WHO!=='Laura'){alert('Somente a coordenação (Laura) pode arbitrar divergências.');return;}
+ const cf=CONFLICTS.find(x=>x.id===id);const just=S.conf[id]&&S.conf[id].just||'';
+ S.conf[id]={mode,keep:mode==='manter'?[keep]:mode==='ambas'?cf.codes.slice():[],just,override:true,by:'arbitragem da coordenação',ts:new Date().toISOString()};
+ cf.codes.forEach(c=>{if(!alive(c))delete S.grade[c];});
+ save();renderAll();go(S.step,true);}
+
+function setJust(id,v){if(!S.conf[id])S.conf[id]={mode:'',keep:[],pending:true};S.conf[id].just=v;save();}
+function alive(c){const d=D(c);if(d.obrig)return true;
+ for(const cf of CONFLICTS){if(!cf.codes.includes(c))continue;const dec=S.conf[cf.id];if(!dec||!dec.mode)continue;
+  if(dec.mode==='fundir')return false;
+  if(dec.mode==='manter'&&!dec.keep.includes(c))return false;}return true;}
+function inConflict(c){return CONFLICTS.some(cf=>cf.codes.includes(c));}
+function renderFree(){
+ const el=document.getElementById('freelist');el.innerHTML='';
+ DB.disc.filter(d=>!d.obrig&&!inConflict(d.code)).forEach(d=>{
+  const rev=!!S.rev[d.code];
+  const rels=(DB.relmap[d.code]||[]).filter(r=>r.tipo==='comp').map(r=>'complementa '+r.com).join(' · ');
+  const m=document.createElement('div');m.className='minicard';
+  m.innerHTML=`<span class="ok">${rev?'✓ revisada':''}</span><b>${d.code}</b> ${d.title}
+  <span style="color:var(--mut);font-size:.7rem">· ${d.ch||'60h'} · pré-req ${d.pre||'não há'}</span>
+  <div class="rels">${rels}</div>
+  <details><summary>Ementa completa</summary><h4>Ementa</h4>${d.ementa}<h4>Objetivo</h4>${d.objetivo}<h4>Bibliografia</h4>${d.bb}${d.bc}</details>
+  <div style="margin-top:6px"><button style="padding:5px 12px;border-radius:6px;border:1px solid var(--teal);background:${rev?'var(--teal)':'#fff'};color:${rev?'#fff':'var(--teal)'};cursor:pointer;font-size:.7rem;font-weight:600" onclick="togRev('${d.code}')">${rev?'Revisada':'Marcar como revisada'}</button></div>`;
+  el.appendChild(m);});}
+function togRev(c){if(S.rev[c])delete S.rev[c];else S.rev[c]=true;save();renderFree();renderSteps();}
+const TEMAS={simulacao:['ACA330','ACA461','FUS_C1'],po:['ACA124','ACA057','ACA451','FUS_C2'],pcp:['ACA055','ACA401','FUS_C6'],demanda:['ACA060'],estoques:['ACA061','ACA227','FUS_C8'],armazenagem:['ACA062'],compras:['ACA053'],distribuicao:['ACA441','ACA463','ACA501','FUS_C4'],transportes:['ACA521'],custos:['ACA059'],internacional:['ACA425','ACA455','ACA445','FUS_C5'],servicos:['ACA511'],decisao:['ACA224'],topicos:['ACA056','ACA058','ACA531','FUS_C3']};
+function renderBuilder(){
+ const ob=document.getElementById('slotObrig');ob.innerHTML='';
+ ['ACA360','ACA301'].forEach(c=>{const d=D(c);ob.innerHTML+=`<span class="pill obrig">${c} ${d.title} · ${d.ch}</span>`;});
+ ob.innerHTML+=`<div style="font-size:.68rem;color:var(--mut);margin-top:6px">Suporte quantitativo obrigatório: MAC119 · MAD211 · ACA228</div>`;
+ const op=document.getElementById('slotOpt');op.innerHTML='';
+ DB.disc.filter(d=>!d.obrig).forEach(d=>{
+  const dead=!alive(d.code);const sel=!!S.grade[d.code];
+  op.innerHTML+=`<span class="pill${sel?' sel':''}${dead?' dead':''}" onclick="${dead?'':`togGrade('${d.code}')`}">${d.code} ${d.title} · ${d.ch||'60h'}</span>`;});
+ CONFLICTS.forEach(cf=>{const dec=S.conf[cf.id];if(dec&&dec.mode==='fundir'){
+  const k='FUS_'+cf.id;
+  op.innerHTML+=`<span class="pill fused ${S.grade[k]?'sel':''}" onclick="togGrade('${k}')">[NOVA] fusão ${cf.codes.join('+')} · 60h</span>`;}});
+ coverage();kpis();}
+function togGrade(code){if(S.grade[code])delete S.grade[code];else S.grade[code]=true;save();renderBuilder();renderSteps();}
+function coverage(){
+ const cov=document.getElementById('cov');cov.innerHTML='<b style="font-size:.7rem;color:var(--mut);width:100%">Cobertura temática:</b>';
+ const sel=new Set(Object.keys(S.grade));
+ for(const[t,codes]of Object.entries(TEMAS)){const ok=codes.some(c=>sel.has(c));
+  cov.innerHTML+=`<span class="cv ${ok?'ok':'gap'}">${t}</span>`;}}
+function kpis(){
+ S.cOpt=parseInt(document.getElementById('cOpt').value)||0;S.cLivre=parseInt(document.getElementById('cLivre').value)||0;
+ const sel=Object.keys(S.grade);let ch=0,cred=0;
+ sel.forEach(k=>{if(k.startsWith('FUS_')){ch+=60;cred+=4;}else{const d=D(k);ch+=parseInt(d.ch)||60;cred+=d.cred||4;}});
+ const alvo=S.cOpt+S.cLivre;
+ document.getElementById('kConf').textContent=(CONFLICTS.length-allPend())+' / '+CONFLICTS.length;
+ document.getElementById('kOpt').textContent=sel.length+' / '+alvo;
+ document.getElementById('kCH').textContent=ch+'h / '+cred;
+ const st=document.getElementById('kStatus');
+ if(sel.length===alvo&&!allPend()){st.textContent='grade completa';st.className='ok';}
+ else if(sel.length>alvo){st.textContent='excede em '+(sel.length-alvo);st.className='bad';}
+ else{st.textContent=(alvo-sel.length)+' vaga(s)'+(allPend()?' · '+allPend()+' conflito(s)':'');st.className='';}}
+document.getElementById('cOpt').addEventListener('input',()=>{kpis();save();});
+document.getElementById('cLivre').addEventListener('input',()=>{kpis();save();});
+function renderAll(){renderConfs();renderFree();renderBuilder();renderSteps();}
+function buildAta(){
+ let out='ATA DE DECISÃO — REVISÃO DO EIXO OPERAÇÕES, LOGÍSTICA E APOIO À DECISÃO\n';
+ out+='FACC/UFRJ · Curso de Administração · '+new Date().toLocaleDateString('pt-BR')+'\n';
+ out+='Base: PPC 2026 (Ementas 2026-05-19), 32 disciplinas analisadas.\n\n';
+ const fmtTs=t=>t?new Date(t).toLocaleString('pt-BR'):'';
+ const voteLine=vv=>PEOPLE.map(p=>p+'='+(vv[p]?(vv[p].mode==='manter'?'só '+vv[p].keep[0]:vv[p].mode)+(vv[p].ts?' ('+fmtTs(vv[p].ts)+')':''):'—')).join('; ');
+ out+='1. DUPLICAÇÕES\n';
+ CONFLICTS.filter(c=>c.tipo==='dup').forEach(cf=>{const d=S.conf[cf.id];
+  out+='  '+cf.id+' ('+cf.codes.join(' × ')+'): '+(d&&d.mode?(d.mode==='fundir'?'FUNDIR em disciplina nova':d.mode==='ambas'?'MANTER TODAS':'MANTER '+d.keep.join(', ')+'; demais excluídas')+(d.by?' ['+d.by+(d.ts?' em '+fmtTs(d.ts):'')+']':''):'PENDENTE')+'\n';
+  const vv=(S.votes&&S.votes[cf.id])||{};out+='     Votos: '+voteLine(vv)+'\n';
+  if(d&&d.just)out+='     Justificativa: '+d.just+'\n';});
+ out+='\n2. SOBREPOSIÇÕES PARCIAIS\n';
+ CONFLICTS.filter(c=>c.tipo==='sob').forEach(cf=>{const d=S.conf[cf.id];
+  out+='  '+cf.id+' ('+cf.codes.join(' × ')+'): '+(d&&d.mode?(d.mode==='fundir'?'FUNDIR':d.mode==='ambas'?'MANTER TODAS':'MANTER '+d.keep.join(', '))+(d.by?' ['+d.by+(d.ts?' em '+fmtTs(d.ts):'')+']':''):'PENDENTE')+'\n';
+  const vv2=(S.votes&&S.votes[cf.id])||{};out+='     Votos: '+voteLine(vv2)+'\n';
+  if(d&&d.just)out+='     Justificativa: '+d.just+'\n';});
+ out+='\n3. COMPLEMENTARES REVISADAS\n  '+(Object.keys(S.rev).join(', ')||'nenhuma marcada')+'\n';
+ out+='\n4. GRADE APROVADA\n  Obrigatórias: ACA360 GEO; ACA301 Fund. Logística (+ MAC119, MAD211, ACA228)\n  Optativas ('+Object.keys(S.grade).length+' de '+(S.cOpt+S.cLivre)+'):\n';
+ Object.keys(S.grade).forEach(k=>{
+  if(k.startsWith('FUS_')){const cf=CONFLICTS.find(x=>'FUS_'+x.id===k);out+='    [NOVA] fusão de '+cf.codes.join('+')+' (código e ementa a definir)\n';}
+  else{const d=D(k);out+='    '+k+' '+d.title+' ('+(d.ch||'60h')+')\n';}});
+ out+='\n5. EXCLUÍDAS DA GRADE\n';
+ DB.disc.filter(d=>!d.obrig&&!alive(d.code)).forEach(d=>{out+='    '+d.code+' '+d.title+'\n';});
+ out+='\n6. PENDÊNCIAS\n  '+(allPend()?allPend()+' conflito(s) sem decisão':'nenhuma')+'\n';
+ document.getElementById('ata').textContent=out;}
+function copyAta(){buildAta();navigator.clipboard.writeText(document.getElementById('ata').textContent);}
+function resetAll(){if(confirm('Limpar todas as decisões?')){S={conf:{},rev:{},grade:{},votes:{},cOpt:6,cLivre:2,step:1};save();renderAll();go(1,true);}}
+init();
+</script>
+</body>
+</html>

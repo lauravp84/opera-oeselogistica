@@ -243,11 +243,14 @@ async function pushState(isRetry){
  }catch(e){}}
 function save(){if(remote){clearTimeout(saveTimer);saveTimer=setTimeout(()=>pushState(false),400);}else localStorage.setItem(LS,JSON.stringify(S));}
 function D(c){return DB.disc.find(x=>x.code===c)||{};}
+// nomes de pre-requisitos de fora do eixo — fonte: Apendice B do PPC (Ementas 2026-05-19)
+const PREREQ_EXTRA={'ACA122':'Teorias das Organizações','ACA325':'Administração Internacional','ACC222':'Contabilidade Gerencial'};
 function preHTML(pre){ // codigos de pre-requisito com tooltip do nome da disciplina
  if(!pre)return 'não há';
  return String(pre).replace(/\b(?:MAC|MAD|ACA|ACC)\d{3}\b/g,c=>{
   const d=DB.disc.find(x=>x.code===c);
-  return d?c+'<i class="iq" title="'+(d.title||'').replace(/"/g,'&quot;')+'">i</i>':c;});}
+  const nome=d?d.title:PREREQ_EXTRA[c];
+  return nome?c+'<i class="iq" title="'+nome.replace(/"/g,'&quot;')+'">i</i>':c;});}
 function dupPend(){return CONFLICTS.filter(c=>c.tipo==='dup'&&!(S.conf[c.id]&&S.conf[c.id].mode)).length;}
 function allPend(){return CONFLICTS.filter(c=>!(S.conf[c.id]&&S.conf[c.id].mode)).length;}
 function stepDone(n){

@@ -318,10 +318,10 @@ function renderConfs(){
  const nw=!WHO?'block':'none';document.getElementById('nw2').style.display=nw;document.getElementById('nw3').style.display=nw;
  const d2=document.getElementById('confDup');d2.innerHTML='';
  CONFLICTS.filter(c=>c.tipo==='dup').forEach(cf=>d2.appendChild(confCard(cf)));
- if(!d2.innerHTML)d2.innerHTML='<div class="minicard">Nenhuma duplicação pendente — fusões A–D consolidadas pela coordenação em 12/06/2026, ad referendum da banca do NDE (ver Ementário Reestruturado).</div>';
+ if(!d2.innerHTML)d2.innerHTML='<div class="minicard">Nenhuma duplicação pendente — fusões A–D consolidadas pela coordenação em 12/06/2026, ad referendum da banca do NDE (ver Ementário Reestruturado). <a href="/quadro-fusoes.html" style="color:var(--navy);font-weight:700">Ver quadro comparativo das ementas originais &rarr;</a></div>';
  const d3=document.getElementById('confSob');d3.innerHTML='';
  CONFLICTS.filter(c=>c.tipo==='sob').forEach(cf=>d3.appendChild(confCard(cf)));
- if(!d3.innerHTML)d3.innerHTML='<div class="minicard">Nenhuma sobreposição pendente — decisões consolidadas pela coordenação em 12/06/2026, ad referendum da banca do NDE.</div>';
+ if(!d3.innerHTML)d3.innerHTML='<div class="minicard">Nenhuma sobreposição pendente — decisões consolidadas pela coordenação em 12/06/2026, ad referendum da banca do NDE. <a href="/quadro-fusoes.html" style="color:var(--navy);font-weight:700">Ver quadro comparativo das ementas originais &rarr;</a></div>';
  document.getElementById('s_dup').textContent=CONFLICTS.filter(c=>c.tipo==='dup').length;
  document.getElementById('s_sob').textContent=CONFLICTS.filter(c=>c.tipo==='sob').length;
  document.getElementById('s_free').textContent=DB.disc.filter(d=>!d.obrig&&!inConflict(d.code)).length;

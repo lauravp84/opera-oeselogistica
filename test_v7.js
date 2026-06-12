@@ -34,16 +34,16 @@ const results = [];
 function check(name, cond, extra) { results.push((cond ? 'PASS' : 'FAIL') + ' ' + name + (extra ? ' — ' + extra : '')); if(!cond) process.exitCode = 1; }
 
 // ===== (a) quórum 3/3 =====
-WHO = 'Laura'; decide('C1', 'manter', 'ACA330');
-const after1 = !(S.conf['C1'] && S.conf['C1'].mode);
-WHO = 'Carlos'; decide('C1', 'manter', 'ACA330');
-const after2 = !(S.conf['C1'] && S.conf['C1'].mode);
-const pm = partialMajority('C1');
-WHO = 'Camila'; decide('C1', 'manter', 'ACA330');
-const after3 = S.conf['C1'] && S.conf['C1'].mode === 'manter' && S.conf['C1'].by === 'consenso 3/3';
+WHO = 'Laura'; decide('C3', 'manter', 'ACA330');
+const after1 = !(S.conf['C3'] && S.conf['C3'].mode);
+WHO = 'Carlos'; decide('C3', 'manter', 'ACA330');
+const after2 = !(S.conf['C3'] && S.conf['C3'].mode);
+const pm = partialMajority('C3');
+WHO = 'Camila'; decide('C3', 'manter', 'ACA330');
+const after3 = S.conf['C3'] && S.conf['C3'].mode === 'manter' && S.conf['C3'].by === 'consenso 3/3';
 check('(a) não fecha com 1 voto', after1);
 check('(a) não fecha com 2 votos iguais', after2, 'partialMajority=' + pm);
-check('(a) fecha no 3º voto', !!after3, 'by=' + (S.conf['C1'] && S.conf['C1'].by));
+check('(a) fecha no 3º voto', !!after3, 'by=' + (S.conf['C3'] && S.conf['C3'].by));
 // fechar com 2 votos (Laura)
 WHO = 'Laura'; decide('C2', 'fundir', ''); WHO = 'Carlos'; decide('C2', 'fundir', '');
 check('(a) C2 aberto com 2/3', !(S.conf['C2'] && S.conf['C2'].mode));

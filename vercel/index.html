@@ -96,6 +96,7 @@ details p{font-size:.76rem;margin-bottom:4px}
 .cs-div{background:var(--redbg);color:var(--red)}
 .cs-wait{background:#eee;color:var(--mut)}
 .nowho{background:var(--redbg);border:1px solid var(--red);color:var(--red);border-radius:8px;padding:8px 12px;font-size:.76rem;font-weight:600;margin-bottom:12px}
+.iq{display:inline-flex;align-items:center;justify-content:center;width:13px;height:13px;border-radius:50%;background:var(--navy);color:#fff;font-size:9px;font-weight:700;font-style:normal;margin-left:3px;cursor:help;vertical-align:1px}
 footer{text-align:center;font-size:.68rem;color:var(--mut);margin:28px 0 18px}
 </style>
 </head>
@@ -242,6 +243,11 @@ async function pushState(isRetry){
  }catch(e){}}
 function save(){if(remote){clearTimeout(saveTimer);saveTimer=setTimeout(()=>pushState(false),400);}else localStorage.setItem(LS,JSON.stringify(S));}
 function D(c){return DB.disc.find(x=>x.code===c)||{};}
+function preHTML(pre){ // codigos de pre-requisito com tooltip do nome da disciplina
+ if(!pre)return 'não há';
+ return String(pre).replace(/\b(?:MAC|MAD|ACA|ACC)\d{3}\b/g,c=>{
+  const d=DB.disc.find(x=>x.code===c);
+  return d?c+'<i class="iq" title="'+(d.title||'').replace(/"/g,'&quot;')+'">i</i>':c;});}
 function dupPend(){return CONFLICTS.filter(c=>c.tipo==='dup'&&!(S.conf[c.id]&&S.conf[c.id].mode)).length;}
 function allPend(){return CONFLICTS.filter(c=>!(S.conf[c.id]&&S.conf[c.id].mode)).length;}
 function stepDone(n){
@@ -267,7 +273,7 @@ function sideHTML(c,dec){
  if(dec){if(dec.keep&&dec.keep.includes(c))cls+=' win';
  else if(dec.mode==='manter')cls+=' lose';else if(dec.mode==='fundir')cls+=' lose';}
  return `<div class="${cls}"><h3>${c} — ${d.title||''}</h3>
- <div class="meta">${d.ch||'60h'} · ${d.cred||4} créd · Pré-req: ${d.pre||'não há'} ${d.obrig?'· <b>OBRIGATÓRIA</b>':''}</div>
+ <div class="meta">${d.ch||'60h'} · ${d.cred||4} créd · Pré-req: ${preHTML(d.pre)} ${d.obrig?'· <b>OBRIGATÓRIA</b>':''}</div>
  <h4>Ementa</h4>${d.ementa||'<p>—</p>'}
  <details><summary>Objetivo e bibliografia</summary><h4>Objetivo</h4>${d.objetivo||''}<h4>Bibliografia básica</h4>${d.bb||''}<h4>Complementar</h4>${d.bc||''}</details></div>`;}
 function confCard(cf){
@@ -390,7 +396,7 @@ function renderFree(){
   const rels=(DB.relmap[d.code]||[]).filter(r=>r.tipo==='comp').map(r=>'complementa '+r.com).join(' · ');
   const m=document.createElement('div');m.className='minicard';
   m.innerHTML=`<span class="ok">${rev?'✓ revisada':''}</span><b>${d.code}</b> ${d.title}
-  <span style="color:var(--mut);font-size:.7rem">· ${d.ch||'60h'} · pré-req ${d.pre||'não há'}</span>
+  <span style="color:var(--mut);font-size:.7rem">· ${d.ch||'60h'} · pré-req ${preHTML(d.pre)}</span>
   <div class="rels">${rels}</div>
   <details><summary>Ementa completa</summary><h4>Ementa</h4>${d.ementa}<h4>Objetivo</h4>${d.objetivo}<h4>Bibliografia</h4>${d.bb}${d.bc}</details>
   <div style="margin-top:6px"><button style="padding:5px 12px;border-radius:6px;border:1px solid var(--teal);background:${rev?'var(--teal)':'#fff'};color:${rev?'#fff':'var(--teal)'};cursor:pointer;font-size:.7rem;font-weight:600" onclick="togRev('${d.code}')">${rev?'Revisada':'Marcar como revisada'}</button></div>`;
